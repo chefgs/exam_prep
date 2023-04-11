@@ -1,0 +1,455 @@
+kubernetes.io/docs
+kubernetes.io/blogs
+Kubernetes troubleshooting docs
+Kubernetes cheatsheet
+kubernetes api references docs
+
+--dry-run=client -o yaml > yaml-file
+
+.vimrc additions
+
+set tabstop=2
+set expandtab
+set shiftwidth=2
+
+------------
+apiVersion: apps/v1
+kind: Deployment
+
+apiVersion: apps/v1
+kind: Replicaset
+
+apiVersion: v1
+kind: Pod
+
+Pod can be created using kubectl run command
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-pod
+spec:
+  containers:
+    - name: nginx
+      image: nginx:alpine
+ 
+ 
+apiVersion: v1
+kind: Pod
+metadata:
+  name: redis
+  labels:
+    tier: db
+spec:
+  containers:
+    - name: redis
+      image: redis:alpine
+      
+Create a pod called httpd using the image httpd:alpine in the default namespace. Next, create a service of type ClusterIP by the same name (httpd). The target port for the service should be 80.
+
+kubectl run httpd --image=httpd:alpine 
+
+kubectl expose pod httpd --port=80 --cluster-ip="" --name httpd
+---====
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+spec:
+  nodeName: node01
+  containers:
+  -  image: nginx
+     name: nginx
+     
+     
+     ----
+     
+     
+kubectl get pods -l env=dev
+
+====
+
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+   name: replicaset-1
+spec:
+   replicas: 2
+   selector:
+      matchLabels:
+        tier: nginx
+   template:
+     metadata:
+       labels:
+        tier: nginx
+     spec:
+       containers:
+       - name: nginx
+         image: nginx
+ 
+     9  kubectl get pod -l env=prod,bu=finance,tier=frontend
+   10  ls
+   11  kubectl create -f replicaset-definition-1.yaml
+   12  vi replicaset-definition-1.yaml 
+   13  kubectl create -f replicaset-definition-1.yaml
+ 
+ ------===
+ 
+ 
+ ---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: bee
+spec:
+  containers:
+  - image: nginx
+    name: bee
+  tolerations:
+  - key: spray
+    value: mortein
+    effect: NoSchedule
+    operator: Equal
+    
+  3  kubectl get pod node01
+    4  kubectl describe node node01
+    5  kubectl taint nodes node01 spray=mortein:NoSchedule
+    6  kubectl run mosquito --image=nginx
+    7  kubectl get pods
+    8  kubectl describe pod mosquito
+    9  ls
+   10  cat sample.yaml 
+   11  kubectl run bee --image=nginx
+   12  kubectl edit pod bee
+   13  kubectl get pods
+   14  kubectl describe pod bee
+   15  kubectl get node controlplane
+   16  kubectl describe node controlplane
+   17  kubectl edit node controlplane
+   18  kubectl get node controlplane
+   19  kubectl describe node controlplane
+   20  kubectl get pods
+   21  kubectl describe pods mosquito
+
+
+---------------
+
+node affinity - add affinity in container section of pod spec
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: "2"
+  creationTimestamp: "2023-04-10T06:46:04Z"
+  generation: 2
+  labels:
+    app: blue
+  name: blue
+  namespace: default
+  resourceVersion: "3210"
+  uid: 5bdc8b5c-5688-42a7-b7f7-21682e5b08ed
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 3
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: blue
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: blue
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: color
+                operator: In
+                values:
+                - blue
+      containers:
+      - image: nginx
+      
+      
+      
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: node-role.kubernetes.io/control-plane
+                operator: Exists
+                values:
+                - ""
+ https://kubernetes.io/docs/tasks/configure-pod-container/assign-pods-nodes-using-node-affinity/
+ https://kubernetes.io/docs/tasks/configure-pod-container/assign-pods-nodes-using-node-affinity/
+ https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#node-affinity
+ 
+     1  kubectl describe node node01
+    2  kubectl label nodes node01 color=blue
+    3  kubectl create deployment blue --image=nginx --replicas=3
+    4  kubectl describe pods
+    5  ls
+    6  cat sample.yaml 
+    7  vi sample.yaml 
+    8  kubectl get deployment
+    9  kubectl edit deployment blue
+   10  kubectl describe node node01
+   11  kubectl create deployment red --image=nginx --replicas=2
+   12  kubectl describe node controlplane
+   13  kubectl edit deployment red
+   14  kubectl describe node controlplane
+   15  kubectl edit deployment red
+   
+   
+   -----------
+   
+   
+   get the deployed yaml file using the command
+   
+   kubectl get po elephant -o yaml > elephant.yaml	
+   
+   then replace pod 
+   
+   kubectl replace -f elephant.yaml --force
+  
+      6  kubectl edit pod elephant
+    7  kubectl get po elephant -o yaml > elephant.yaml
+    8  vi elephant.yaml 
+    9  kubectl replace -f elephant.yaml --force
+    
+ ----
+ 
+ For daemonset question, download the sample yal from docs and edit as per the question
+ 
+ Same thing can be done for pod or deployment config as well
+ 
+     9  wget https://k8s.io/examples/controllers/daemonset.yaml
+   10  vi daemonset.yaml 
+   11  kubectl apply -f daemonset.yaml 
+   12  kubectl get daemonsets --all-namespaces
+   13  kubectl get daemonsets --all-namespaces -n kube-system
+   
+-----
+https://kubernetes.io/docs/reference/setup-tools/kubeadm/implementation-details/#generate-static-pod-manifests-for-control-plane-components
+Control planes are static pods
+pod config file path is configred in /var/lib/kubelet/config.yaml
+static pod config file located in /etc/kubernetes/manifests
+
+
+
+busybox static pod
+
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+  labels:
+    run: static-busybox
+  name: static-busybox
+spec:
+  containers:
+  - command:
+    - sleep
+    - "1000"
+    image: busybox
+    name: static-busybox
+    resources: {}
+  dnsPolicy: ClusterFirst
+  restartPolicy: Never
+status: {}
+~          
+
+    kubectl run --restart=Never --image=busybox:1.28.4 static-busybox --dry-run=client -o yaml --command -- sleep 1000 > /etc/kubernetes/manifests/static-busybox.yaml           
+                
+ https://kubernetes.io/docs/reference/kubectl/cheatsheet/               
+ 
+ 
+ 
+ 
+ ---
+apiVersion: v1 
+kind: Pod 
+metadata:
+  name: nginx 
+spec:
+  schedulerName: my-scheduler
+  containers:
+  - image: nginx
+    name: nginx
+    
+    ======================
+    
+    
+ API Reference docs
+ 
+ https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md
+ https://kubernetes.io/docs/reference/kubernetes-api/workload-resources/
+ https://kubernetes.io/docs/reference/kubernetes-api/workload-resources/pod-v1/
+ 
+ https://kubernetes.io/docs/reference/kubernetes-api/common-definitions/object-meta/#ObjectMeta - metadata reference
+ 
+ metrics references: https://kubernetes.io/docs/reference/instrumentation/
+ ================
+ 
+ git clone https://github.com/kodekloudhub/kubernetes-metrics-server.git
+ 
+     4  git clone https://github.com/kodekloudhub/kubernetes-metrics-server.git
+    5  cd kubernetes-metrics-server/
+    6  ls
+    7* kubectl create -f .A
+    8  kubectl get all
+    9  kubectl get all -A
+   10  kubectl get all -A -n kube-system
+   11  kubectl get all -n kube-system
+
+   16  kubectl top node 
+   17  kubectl top pod
+   
+   =============
+   
+   
+ pod log
+ 
+     1  kubectl get pods
+    2  kubectl logs webapp-1
+    3  kubectl get pods
+    4  kubectl describe pod webapp-2
+    6  kubectl logs webapp-2 -c simple-webapp
+    
+ 
+ 
+ 
+ 
+ --------------
+ 
+ 
+ cat mysqlservice.yaml 
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: "2023-04-10T18:14:02Z"
+  name: mysql-service
+  namespace: beta
+  resourceVersion: "1244"
+  uid: c75de2df-3a3d-4ced-97ca-950f64e58137
+spec:
+  clusterIP: 10.43.195.227
+  clusterIPs:
+  - 10.43.195.227
+  internalTrafficPolicy: Cluster
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+  - port: 3306
+    protocol: TCP
+    targetPort: 3306
+  selector:
+    name: mysql
+  sessionAffinity: None
+  type: ClusterIP
+status:
+  loadBalancer: {}
+
+----
+
+
+cat mysql-service.yaml 
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: "2023-04-10T17:56:53Z"
+  name: mysql-service
+  namespace: alpha
+  resourceVersion: "830"
+  uid: a804b1c6-c818-4ef8-880e-5adc4b70c369
+spec:
+  clusterIP: 10.43.154.200
+  clusterIPs:
+  - 10.43.154.200
+  internalTrafficPolicy: Cluster
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+  - port: 3306
+    protocol: TCP
+    targetPort: 3306
+  selector:
+    name: mysql
+  sessionAffinity: None
+  type: ClusterIP
+status:
+  loadBalancer: {}
+
+https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#run
+
+Expose the hr-web-app as service hr-web-app-service application on port 30082 on the nodes on the cluster.
+
+The web application listens on port 8080.
+
+kubectl expose deployment/kubernetes-bootcamp --type="NodePort" --port 8080
+
+---
+kubectl expose pod messaging --port=6379 --name messaging-service
+
+
+Run the command: kubectl expose deployment hr-web-app --type=NodePort --port=8080 --name=hr-web-app-service --dry-run=client -o yaml > hr-web-app-service.yaml to generate a service definition file.
+
+Now, in generated service definition file add the nodePort field with the given port number under the ports section and create a service.
+
+
+
+--
+
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-analytics
+spec:
+  capacity:
+    storage: 100Mi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteMany
+  hostPath:
+      path: /pv/data-analytics
+      
+      
+      
+      
+      
+      
+      
+      
+....
+
+https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#expose
+
+https://kubernetes.io/docs/concepts/storage/persistent-volumes/#provisioning
+
+https://kubernetes.io/docs/reference/kubectl/cheatsheet/
+
+      
+      
+      
+      
+...      
+Debugging Kubernetes nodes with crictl
+crictl is a command-line interface for CRI-compatible container runtimes. You can use it to inspect and debug container runtimes and applications on a Kubernetes node. crictl and its source are hosted in the cri-tools repository.
+https://kubernetes.io/docs/tasks/debug/debug-cluster/crictl/
+
